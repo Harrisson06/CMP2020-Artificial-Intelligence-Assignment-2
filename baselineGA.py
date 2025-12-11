@@ -27,12 +27,29 @@ class BaselineGA(AbstractGA):
         self.population stores the current population 
         self.fitnesses stores the fitness of each member of the population (in the order they appear in self.population). 
     """
+    def select_parents(self, population, fitnesses):
+
+        return [random.choices(population) for i in range(len(population))]
+
+    def choose_two(self, parents):
+        return random.sample(parents, 2)
+
     def produce_new_generation(self):
-    
-        # ENTER YOUR CODE
+
+        parents = self.select_parents(self.population, self.fitnesses)
+
+        offspring =[]
+        while len(offspring) < len(self.population):
+            parent1, parent2 = self.choose_two(parents)
+            child1, child2 = self.crossover(parent1, parent2)
+            offspring.extend([child1, child2])
+
+        offspring = offspring[:len(self.population)]
+        new_population = [self.mutate(individual) for  individual in offspring]
         
         # calculate the new fitness and return the best individual
         self.calculate_fitness_of_population() # <-- this method is in abstractGA.py
+
         return (self.best_individual, self.best_fitness)   
     
     
@@ -65,7 +82,8 @@ class BaselineGA(AbstractGA):
     #   
     
     """ convert a list of cities to a chromosome that can be used by the GA """
-    def convert_city_list_to_chromosome(self, cities):        
+    def convert_city_list_to_chromosome(self, cities):  
+        # len(chromosome) = NUMBER_OF_CITIES, gene(city)  
         return cities   
         
     """ convert a chromosome into a list of cities that can be used by fitness 
