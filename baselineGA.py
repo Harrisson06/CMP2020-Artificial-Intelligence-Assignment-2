@@ -28,17 +28,16 @@ class BaselineGA(AbstractGA):
         self.fitnesses stores the fitness of each member of the population (in the order they appear in self.population). 
     """
     def select_parents(self, population, fitnesses):
-
         return [random.choices(population) for i in range(len(population))]
 
     def choose_two(self, parents):
         return random.sample(parents, 2)
-
+        
     def produce_new_generation(self):
 
         parents = self.select_parents(self.population, self.fitnesses)
-
         offspring =[]
+
         while len(offspring) < len(self.population):
             parent1, parent2 = self.choose_two(parents)
             child1, child2 = self.crossover(parent1, parent2)
