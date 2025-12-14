@@ -13,6 +13,7 @@
 from numpy.random import randint # https://numpy.org/doc/stable/reference/random/generated/numpy.random.randint.html
 from numpy.random import rand    # https://numpy.org/doc/stable/reference/random/generated/numpy.random.rand.html
 import random
+import math
 
 from abstractGA import AbstractGA
 import config
@@ -28,11 +29,64 @@ class BaselineGA(AbstractGA):
         self.fitnesses stores the fitness of each member of the population (in the order they appear in self.population). 
     """
     def select_parents(self, population, fitnesses):
-        return [random.choices(population) for i in range(len(population))]
+        eps = 1e-6
+        if not fitnesses:
+            return [random.choice(population) for _ in  range(len(population))]
+        
+        inv = [1.0 / (f + eps) for f in fitnesses]
+        total = sum(inv)
+
+        if total == 0:
+            return [random.choice(population) for _ in range(len(population))]
+        probs = [v / total for v in inv]
+
+        return random.choices(population, weights= probs, k=len(population))
 
     def choose_two(self, parents):
         return random.sample(parents, 2)
+
+    def crossover(self, parent1, parent2):
+        size = len(parent1)
+        if size < 2:
+            return parent1.copy(), parent2.copy()
         
+        a = randint(0, size)
+        b = randint(0, size)
+        left, right = min(a, b), max(a, b)
+        if left == right:
+            right = (left + 1) % size
+            if right == left:
+                return parent1.copy(), parent2.copy()
+            if left > right: 
+                left, right = right, left
+
+        def ox(p1, p2):
+            child = [None] * size
+            
+            for i in range(left, right + 1):
+                child[i] = p1[i]
+
+            p2_index = 0
+            for i in range(size):
+                idx = (right + 1 + i) % size
+
+                while p2[p2_index] in child:
+                    p2_index += 1
+            return child
+
+        child1 = ox(parent1, parent2)
+        child2 = ox(parent2, parent1)
+        return child1, child2
+        
+    def mutation(self, individual):
+        ind = individual.copy()
+        if rand() < config.MUTATION_RATE:
+            size = len(ind)
+            if size >= 2:
+                i, j = random.sample(range(size), 2)
+                ind[i], ind[j] = ind[j], ind[i]
+        return ind
+
     def produce_new_generation(self):
 
         parents = self.select_parents(self.population, self.fitnesses)
@@ -40,11 +94,22 @@ class BaselineGA(AbstractGA):
 
         while len(offspring) < len(self.population):
             parent1, parent2 = self.choose_two(parents)
-            child1, child2 = self.crossover(parent1, parent2)
-            offspring.extend([child1, child2])
+
+            if rand() < config.CROSSOVER_RATE:
+                child1, child2 = self.crossover(parent1.copy(), parent2.copy())
+            else: 
+                child1, child2 = parent1.copy(), parent2.copy()
+
+            child1 = self.mutation(child1)
+            child2 = self.mutation(child2)
+
+            offspring.append(child1)
+            if len(offspring) < len(self.population):
+                offspring.append(child2)
 
         offspring = offspring[:len(self.population)]
-        new_population = [self.mutate(individual) for  individual in offspring]
+
+        self.population = offspring
         
         # calculate the new fitness and return the best individual
         self.calculate_fitness_of_population() # <-- this method is in abstractGA.py
@@ -61,10 +126,17 @@ class BaselineGA(AbstractGA):
          
         total = 0
         
-        # ENTER YOUR CODE
-                   
-        return total 
-    
+        if len(cities) > 1:
+            for i in range(len(cities)-1):
+                dx = cities[i].pose.x - cities[i+1].pose.x
+                dy = cities[i].pose.y - cities[i+1].pose.y
+                total += math.hypot(dx, dy)
+            
+            dx = cities[-1].pose.x - cities[0].pose.x
+            dy = cities[-1].pose.y - cities[0].pose.y
+            total += math.hypot(dx, dy)
+        
+        return total
     # YOU WILL NEED TO ADD METHODS
            
            

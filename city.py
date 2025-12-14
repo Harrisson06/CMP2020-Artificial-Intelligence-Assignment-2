@@ -44,6 +44,7 @@ class City():
     def __str__(self):
         return f"[{self.x},{self.y}]"
         
+    #CODE EDITED BY: HARRISON MACDONALD 14/12/2025    
     def __eq__(self, other):
         return self.name == other.name
         
