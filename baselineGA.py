@@ -53,6 +53,7 @@ class BaselineGA(AbstractGA):
         a = randint(0, size)
         b = randint(0, size)
         left, right = min(a, b), max(a, b)
+
         if left == right:
             right = (left + 1) % size
             if right == left:
@@ -63,17 +64,30 @@ class BaselineGA(AbstractGA):
         def ox(p1, p2):
             child = [None] * size
             
+            # Copies the segment from p1 into child. 
             for i in range(left, right + 1):
                 child[i] = p1[i]
+            
+            # Creating a set of identifiers (city names) already present in "child".
+            # Using this set to test membership in O(1) time when filling the remaining positions from parent2.
+            existing = set()
+            for x in child: 
+                if x is not None:
+                    existing.add(x.name)
 
-            p2_index = 0
-            for i in range(size):
-                idx = (right + 1 + i) % size
-
-                while p2[p2_index] in child:
-                    p2_index += 1
+            # Fill the positions from p2 in order.
+            fill_pos = (right + 1) % size
+            for gene in p2:
+                if gene.name not in existing:
+                    child[fill_pos] = gene
+                    existing.add(gene.name)
+                    fill_pos = (fill_pos + 1) % size
+            
+            # Checking for any None values in code
+            if any(x is None for x in child):
+                raise RuntimeError("Crossover produced a child with None Values - check OX()")
             return child
-
+ 
         child1 = ox(parent1, parent2)
         child2 = ox(parent2, parent1)
         return child1, child2

@@ -46,8 +46,21 @@ class City():
         
     #CODE EDITED BY: HARRISON MACDONALD 14/12/2025    
     def __eq__(self, other):
+        # Expanded the function to handle None errors
+        if other is None:
+            return False
+
+        # if other is not city, try reverse comparison or return NotImplemented         
+        if not isinstance(other, City):
+            return NotImplemented
         return self.name == other.name
         
+
+    def __ne__(self, other):
+        eq = self.__eq__(other)
+        if eq is NotImplemented:
+            return NotImplemented
+        return not eq
     #---    
 
 # End of City class    
