@@ -85,7 +85,8 @@ class BaselineGA(AbstractGA):
             
             # Checking for any None values in code
             if any(x is None for x in child):
-                raise RuntimeError("Crossover produced a child with None Values - check OX()")
+                raise RuntimeError("Crossover produced a child with None Values - check OX()"
+                f"Left/Right = {left}/{right}, child None indicies = {[i for i, x in enumerate(child) if x is None]}")
             return child
  
         child1 = ox(parent1, parent2)
@@ -168,14 +169,17 @@ class BaselineGA(AbstractGA):
     
     """ convert a list of cities to a chromosome that can be used by the GA """
     def convert_city_list_to_chromosome(self, cities):  
-        # len(chromosome) = NUMBER_OF_CITIES, gene(city)  
-        return cities   
-        
+
+        world_list = self.world.get_cities()
+        name_to_index = {c.name: idx for idx, c in enumerate(world_list)}
+        return [name_to_index[c.name] for c in cities]
+    
     """ convert a chromosome into a list of cities that can be used by fitness 
          calculation and be returned at the end.
     """
     def convert_chromosome_to_city_list(self, chromosome):
-        return chromosome
+        world_list = self.world.get_cities()
+        return [world_list[i] for i in chromosome]
     #-------------------
     
           
