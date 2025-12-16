@@ -28,7 +28,7 @@ def main():
     world.update_world(solution)
     print("Locations to visit: ", solution, " Fitness:", fitness)
     display_solution = Environment(world, "Best individual")
-        
+    
 
 if __name__ == "__main__":
     main()    

@@ -28,6 +28,7 @@ class BaselineGA(AbstractGA):
         self.population stores the current population 
         self.fitnesses stores the fitness of each member of the population (in the order they appear in self.population). 
     """
+
     def select_parents(self, population, fitnesses):
         eps = 1e-6
         if not fitnesses:
@@ -99,11 +100,62 @@ class BaselineGA(AbstractGA):
                 ind[i], ind[j] = ind[j], ind[i]
         return ind
 
+    # Small wrappers for testing and compatability.
+    def wrapper_crossover(self, parent1, parent2):
+        return self.crossover(parent1, parent2)
+    
+    def wrapper_mutation(self, individual):
+        return self.mutation(self, individual)
+    
+    def set_random_seed(self, seed):
+        import numpy as _np
+        random.seed(seed)
+        _np.random.seed(seed)
+
     def produce_new_generation(self):
 
         parents = self.select_parents(self.population, self.fitnesses)
         offspring =[]
 
+        # Elitism: Enabled in the config file
+        # optionally keeps the current best to re-insert.
+        elitism_enabled = getattr(config, "ELITISM", False)
+        saved_best = None
+        if elitism_enabled and self.best_individual is not None:
+            saved_best = self.best_individual.copy()
+
+        while len(offspring) < len(self.population):
+            parent1, parent2 = self.crossover(parent1.copy(), parent2.copy())
+
+            if rand() < config.CROSSOVER_RATE:
+                child1, child2 = self.crossover(parent1.copy(), parent2.copy())
+            else: 
+                child1, child2 = parent1.copy(), parent2.copy()
+
+            child1 = self.mutation(child1)
+            child2 = self.mutation(child2)
+
+            offspring.append(child1)
+            if len(offspring) < len(self.population):
+                offspring.append(child2)
+        
+        offspring = offspring[:len(self.population)]
+
+        if elitism_enabled and saved_best is not None:
+
+            offspring_fitnesses = [self.calculate_fitness(ind) for ind in offspring]
+            worst_idx = max(range(len(offspring_fitnesses)), key=lambda i: offspring_fitnesses[i])
+            offspring[worst_idx] = saved_best
+        
+        self.population = offspring
+
+        # calculates new fitness and returns the best individual.
+        self.calculate_fitness_of_population()
+
+        return (self.best_individual, self.best_fitness)
+
+
+        # not elitism
         while len(offspring) < len(self.population):
             parent1, parent2 = self.choose_two(parents)
 
