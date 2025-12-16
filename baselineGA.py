@@ -46,6 +46,7 @@ class BaselineGA(AbstractGA):
         return random.sample(parents, 2)
 
     def crossover(self, parent1, parent2):
+        
         size = len(parent1)
         if size < 2:
             return parent1.copy(), parent2.copy()
@@ -61,39 +62,33 @@ class BaselineGA(AbstractGA):
             if left > right: 
                 left, right = right, left
 
+
         def ox(p1, p2):
             child = [None] * size
             
             # Copies the segment from p1 into child. 
             for i in range(left, right + 1):
                 child[i] = p1[i]
-            
-            def gene_id(g):
-                return getattr(g, "name", g)
-            
+                        
             # Creating a set of identifiers (city names) already present in "child".
             # Using this set to test membership in O(1) time when filling the remaining positions from parent2.
-            existing = set()
-            for x in child: 
-                if x is not None:
-                    existing.add(gene_id(x))
+            existing = set(x for x in child if x is not None)
 
             # Fill the positions from p2 in order.
             fill_pos = (right + 1) % size
             for gene in p2:
-                if gene_id(gene) not in existing:
+                if gene not in existing:
                     child[fill_pos] = gene
-                    existing.add(gene_id(gene))
+                    existing.add(gene)
                     fill_pos = (fill_pos + 1) % size
             
             # Checking for any None values in code
             if any(x is None for x in child):
                 raise RuntimeError("Crossover produced a child with None Values - check OX()")
             return child
- 
-        child1 = ox(parent1, parent2)
-        child2 = ox(parent2, parent1)
-        return child1, child2
+
+        # Returns two offspring 
+        return ox(parent1, parent2), ox(parent2, parent1)
         
     def mutation(self, individual):
         ind = individual.copy()
@@ -154,9 +149,78 @@ class BaselineGA(AbstractGA):
             total += math.hypot(dx, dy)
         
         return total
-    # YOU WILL NEED TO ADD METHODS
-           
-           
+
+
+    """ Depth-limited DFS to search for the best complete tour (minimum fitness).
+    - limit: maximum depth to explore (number of cities in a partial path). If None, defaults to number of cities.
+    Returns: (best_chromosome, best_fitness) where best_chromosome is a list of city indices (same representation as self.population),
+         or (None, float('inf')) if no complete tour was found within the limit."
+    """
+    def depth_limited_search(self, limit=None):
+
+        world_list = self.world.get_cities()
+        n = len(world_list)
+        if n == 0:
+            return (None, float('inf'))
+        
+        if limit is None:
+            return n
+        
+        best = {"fitness": float("inf"), "chromosome": None}
+
+        def dist(i, j):
+            a = world_list[i]
+            b = world_list[j]
+            dx = a.pose.x - b.pose.x
+            dy = a.pose.y - b.pose.y
+            return math.hypot(dx, dy)
+        
+        def dfs(path, used_set, current_parial_len):
+            depth = len(path)
+
+            # If a full tour is completed, compute full fitness
+            if depth == n:
+
+                fitness = self.calculate_fitness(path)
+                if fitness < best["fitness"]:
+                    best["fitness"] = fitness
+                    best["chromosome"] = path.copy()
+                return
+            # If depth limit is hit but not a full tour, dont extend further
+            if depth >= limit:
+                return
+            
+            # Try extending path for each unused city
+            for city_idx in range(n):
+                if city_idx in used_set:
+                    continue
+
+                # calculate added length if city_idx is extended 
+                added = 0.0
+                if path:
+                    added = dist(path[-1], city_idx)
+                new_partial_len = current_parial_len + added
+
+                # Prune if even the partial lenght exceeds current best comlete tour
+                if new_partial_len >= best["fitness"]:
+                    continue
+
+                # Extend and recurse
+                path.append(city_idx)
+                used_set.add(city_idx)
+                dfs(path, used_set, new_partial_len)
+                path.pop()
+                used_set.remove(city_idx)
+
+        # Start dfs in every possible start city
+        for start in range(n):
+            dfs([start], {start}, 0.0)
+
+        if best["chromosome"] is None:
+            return (None, float("inf"))
+        return (best["chromosome"], best["fitness"])
+    
+
     """ The stopping criteria. When this returns true, the GA will stop producing new generations.
         We have given you one implementation of this -- you could try out other implementations.
     """

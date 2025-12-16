@@ -43,6 +43,19 @@ class AbstractGA(ABC):
         self.calculate_fitness_of_population()     
         self.number_of_generations = 1 # initial population = 1st generation
     
+        # Checking config if dfs is activated
+        limit = getattr(config, "DEPTH_LIMIT", None)
+        use_dls_only = getattr(config, "USE_DLS_ONLY", False)
+
+        best_chrom, best_fit = self.depth_limited_search(limit = limit)
+        if best_chrom is not None:
+            self.best_individual = best_chrom
+            self.best_fitness = best_fit
+
+            if use_dls_only:
+                # Return instantly with best route found by dfs
+                return (self.convert_chromosome_to_city_list(self.best_individual), self.best_fitness)
+            
         # Run GA until stopping criteria is met (e.g. number of generations reached) -- you could experiment with alternative stopping criteria
         while not self.finished():
             self.produce_new_generation()  
