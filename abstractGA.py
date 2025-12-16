@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 import random
 
 import config
+import tsp
 
 """ A class that contains some common GA methods and attributes. """
 class AbstractGA(ABC):
@@ -59,12 +60,16 @@ class AbstractGA(ABC):
         # Run GA until stopping criteria is met (e.g. number of generations reached) -- you could experiment with alternative stopping criteria
         while not self.finished():
             self.produce_new_generation()  
-            self.number_of_generations = self.number_of_generations + 1          
+            self.number_of_generations += 1          
             print ("number of generations =", self.number_of_generations, " best fitness = ", self.best_fitness)
+
+            if per_generation_callback is not None and self.number_of_generations:
+                per_generation_callback(self.convert_chromosome_to_city_list(self.best_individual),
+                                        self.best_fitness,
+                                        self.number_of_generations)
             
         # return the best discovered solution and its fitness
         return (self.convert_chromosome_to_city_list(self.best_individual), self.best_fitness) 
-        
         
     """ Creates the initial population by placing the cities in random orders. """
     def initialise_population(self):
@@ -89,7 +94,7 @@ class AbstractGA(ABC):
        You will need to implement self.calculate_fitness(...) within BaselineGA.
     """      
     def calculate_fitness_of_population(self):
-        self.fitnesses = [self.calculate_fitness(i) for i in self.population]
+        self.fitnesses = [self.calculate_fitness_euclidian(i) for i in self.population]
         
         # check for new best solution		
         for i in range(len(self.population)):
@@ -119,7 +124,7 @@ class AbstractGA(ABC):
     
     # calculate the fitness of a single chromosome 
     @abstractmethod 
-    def calculate_fitness(self, chromosome):
+    def calculate_fitness_euclidian(self, chromosome):
         pass
  
 

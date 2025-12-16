@@ -99,13 +99,19 @@ class BaselineGA(AbstractGA):
                 i, j = random.sample(range(size), 2)
                 ind[i], ind[j] = ind[j], ind[i]
         return ind
+    
+    # Tournament selection: pick k random individuals and returns the best one.
+    def tournament_selection(self, population, fitnesses, k=3):
+        tournament_indicies = random.sample(range(len(population)), k)
+        best_idx = min(tournament_indicies, key=lambda i: fitnesses[i])
+        return population[best_idx]
 
     # Small wrappers for testing and compatability.
     def wrapper_crossover(self, parent1, parent2):
         return self.crossover(parent1, parent2)
     
     def wrapper_mutation(self, individual):
-        return self.mutation(self, individual)
+        return self.mutation(individual)
     
     def set_random_seed(self, seed):
         import numpy as _np
@@ -114,94 +120,52 @@ class BaselineGA(AbstractGA):
 
     def produce_new_generation(self):
 
-        parents = self.select_parents(self.population, self.fitnesses)
-        offspring =[]
-
-        # Elitism: Enabled in the config file
-        # optionally keeps the current best to re-insert.
-        elitism_enabled = getattr(config, "ELITISM", False)
-        saved_best = None
-        if elitism_enabled and self.best_individual is not None:
-            saved_best = self.best_individual.copy()
-
-        while len(offspring) < len(self.population):
-            parent1, parent2 = self.crossover(parent1.copy(), parent2.copy())
-
-            if rand() < config.CROSSOVER_RATE:
-                child1, child2 = self.crossover(parent1.copy(), parent2.copy())
-            else: 
-                child1, child2 = parent1.copy(), parent2.copy()
-
-            child1 = self.mutation(child1)
-            child2 = self.mutation(child2)
-
-            offspring.append(child1)
-            if len(offspring) < len(self.population):
-                offspring.append(child2)
-        
-        offspring = offspring[:len(self.population)]
-
-        if elitism_enabled and saved_best is not None:
-
-            offspring_fitnesses = [self.calculate_fitness(ind) for ind in offspring]
-            worst_idx = max(range(len(offspring_fitnesses)), key=lambda i: offspring_fitnesses[i])
-            offspring[worst_idx] = saved_best
-        
-        self.population = offspring
-
-        # calculates new fitness and returns the best individual.
+        # Calculates new fitness and returns the best individual
         self.calculate_fitness_of_population()
 
-        return (self.best_individual, self.best_fitness)
+        # Stores the current best before generating new population (elitism based)
+        saved_best = self.best_individual.copy() if self.best_individual is not None else None
 
+        # initializing offspring list
+        offspring = []
 
-        # not elitism
         while len(offspring) < len(self.population):
-            parent1, parent2 = self.choose_two(parents)
+            # Using tournament selection to choose parents
+            parent1 = self.tournament_selection(self.population, self.fitnesses, k = config.TOURNAMENT_K)
+            parent2 = self.tournament_selection(self.population, self.fitnesses, k = config.TOURNAMENT_K)
 
+            # Apply crossover
             if rand() < config.CROSSOVER_RATE:
                 child1, child2 = self.crossover(parent1.copy(), parent2.copy())
-            else: 
+            else:
                 child1, child2 = parent1.copy(), parent2.copy()
 
+            # Apply mutation
             child1 = self.mutation(child1)
             child2 = self.mutation(child2)
 
+            # Add offspring to the new population
             offspring.append(child1)
-            if len(offspring) < len(self.population):
+            if len(offspring) <len(self.population):
                 offspring.append(child2)
 
+        # Trim to exact population size    
         offspring = offspring[:len(self.population)]
 
+        # Elitism: Replace worst offspring with best saved individual
+        if config.ELITISM and saved_best is not None:
+            offspring_fitnesses = [self.calculate_fitness(ind) for ind in offspring]
+            worst_idx = max(range(len(offspring_fitnesses)), key =lambda i: offspring_fitnesses[i])
+            offspring[worst_idx] = saved_best
+
+        # Replace old population with offspring
         self.population = offspring
-        
-        # calculate the new fitness and return the best individual
-        self.calculate_fitness_of_population() # <-- this method is in abstractGA.py
+
+        # Calculates fitness and returns the best individual
+        self.calculate_fitness_of_population() # <- this method is in abstract GA.py
 
         return (self.best_individual, self.best_fitness)   
     
-    
-    """ Sum the distance between each of the cities 
-        EDIT THIS: you will need to add the code that calculates the fitness of a single individual/chromosome
-        (Note, the calculate_fitness_of_population() method in AbstractGA loops through the population.)
-    """
-    def calculate_fitness(self, chromosome):    
-        cities = self.convert_chromosome_to_city_list(chromosome)   
-         
-        total = 0
-        
-        if len(cities) > 1:
-            for i in range(len(cities)-1):
-                dx = cities[i].pose.x - cities[i+1].pose.x
-                dy = cities[i].pose.y - cities[i+1].pose.y
-                total += math.hypot(dx, dy)
-            
-            dx = cities[-1].pose.x - cities[0].pose.x
-            dy = cities[-1].pose.y - cities[0].pose.y
-            total += math.hypot(dx, dy)
-        
-        return total
-
 
     """ Depth-limited DFS to search for the best complete tour (minimum fitness).
     - limit: maximum depth to explore (number of cities in a partial path). If None, defaults to number of cities.
@@ -216,7 +180,7 @@ class BaselineGA(AbstractGA):
             return (None, float('inf'))
         
         if limit is None:
-            return n
+            limit = n
         
         best = {"fitness": float("inf"), "chromosome": None}
 
@@ -233,7 +197,7 @@ class BaselineGA(AbstractGA):
             # If a full tour is completed, compute full fitness
             if depth == n:
 
-                fitness = self.calculate_fitness(path)
+                fitness = self.calculate_fitness_euclidian(path)
                 if fitness < best["fitness"]:
                     best["fitness"] = fitness
                     best["chromosome"] = path.copy()
@@ -272,19 +236,57 @@ class BaselineGA(AbstractGA):
             return (None, float("inf"))
         return (best["chromosome"], best["fitness"])
     
+    # Calculates the fitness using Euclidian distance
+    def calculate_fitness_euclidian(self, chromosome):    
+        
+        cities = self.convert_chromosome_to_city_list(chromosome)   
+        total = 0
+        
+        if len(cities) > 1:
+            # Sums the distance between consecutive cities
+            for i in range(len(cities)-1):
+                dx = cities[i].pose.x - cities[i+1].pose.x
+                dy = cities[i].pose.y - cities[i+1].pose.y
+                total += math.hypot(dx, dy)
+            
+            # Add distance from last city back to first
+            dx = cities[-1].pose.x - cities[0].pose.x
+            dy = cities[-1].pose.y - cities[0].pose.y
+            total += math.hypot(dx, dy)
+        
+        return total
 
-    """ The stopping criteria. When this returns true, the GA will stop producing new generations.
-        We have given you one implementation of this -- you could try out other implementations.
-    """
+    def calculate_fitness_dfs(self, chromosome):
+        if config.USE_SEARCH_FOR_FITNESS:
+            best_chromosome, best_fitness = self.depth_limited_search(limit=config.DEPTH_LIMIT)
+            if best_chromosome is not None:
+                return best_fitness
+            else: 
+                # Fallback to euclidian if failure
+                return self.calculate_fitness_euclidian(chromosome)
+        else:
+            # Use euclidian distance (Default setting)
+            return self.calculate_fitness_euclidian(chromosome)
+
+    # Creates two stopping criteria 
+    # Max generations are reaches as a default
+    # Early stopping can be activated in config.py
+    # max generations without change can be altered in config.py
     def finished(self):
-        return self.number_of_generations >= config.MAX_NUMBER_OF_GENERATIONS
+        if self.number_of_generations >= config.NO_CHANGE_MAX_GENERATIONS:
+            print(f"Stopped: Maximum generations reached: {config.MAX_NUMBER_OF_GENERATIONS}")
+            return True
+        
+        if config.EARLY_STOP:
+            if self.generations_no_improvements >= config.NO_CHANGE_MAX_GENERATIONS:
+                print(f"Early stopping triggered: No improvement for {config.NO_CHANGE_MAX_GENERATIONS} generations")
+                return True 
+            
+        return False
     
-       
     #-------------------
     # The below conversion methods do nothing as are chromosome is just a list of cities; however, 
     #  if you decide to experiment with using a different representation, you may want to edit them.
-    #   
-    
     """ convert a list of cities to a chromosome that can be used by the GA """
     def convert_city_list_to_chromosome(self, cities):  
 
@@ -299,9 +301,6 @@ class BaselineGA(AbstractGA):
         world_list = self.world.get_cities()
         return [world_list[i] for i in chromosome]
     #-------------------
-    
-          
-    
 # End of BaselineGA class    
         
     

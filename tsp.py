@@ -22,6 +22,9 @@ def main():
     
     # Run the GA
     ga = BaselineGA(world) # <-- if you write multiple different GAs to compare, you can modify this line to test them out
+
+    def per_gen_callback(solution_cities, fitness, gen):
+        print(f"[gen {gen}] Locations to visit: {solution_cities} Fitness: {fitness}")
     solution, fitness = ga.run_GA()
     
     # show cities in the order provided by the GA
