@@ -68,25 +68,27 @@ class BaselineGA(AbstractGA):
             for i in range(left, right + 1):
                 child[i] = p1[i]
             
+            def gene_id(g):
+                return getattr(g, "name", g)
+            
             # Creating a set of identifiers (city names) already present in "child".
             # Using this set to test membership in O(1) time when filling the remaining positions from parent2.
             existing = set()
             for x in child: 
                 if x is not None:
-                    existing.add(x.name)
+                    existing.add(gene_id(x))
 
             # Fill the positions from p2 in order.
             fill_pos = (right + 1) % size
             for gene in p2:
-                if gene.name not in existing:
+                if gene_id(gene) not in existing:
                     child[fill_pos] = gene
-                    existing.add(gene.name)
+                    existing.add(gene_id(gene))
                     fill_pos = (fill_pos + 1) % size
             
             # Checking for any None values in code
             if any(x is None for x in child):
-                raise RuntimeError("Crossover produced a child with None Values - check OX()"
-                f"Left/Right = {left}/{right}, child None indicies = {[i for i, x in enumerate(child) if x is None]}")
+                raise RuntimeError("Crossover produced a child with None Values - check OX()")
             return child
  
         child1 = ox(parent1, parent2)
