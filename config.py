@@ -47,18 +47,19 @@ TOURNAMENT_K = 3 # BASE SETTING: 3
 
 # ==========================================
 # Early stopping system 
-EARLY_STOP = True # BASE SETTING: False
-NO_CHANGE_MAX_GENERATIONS = 50 # BASE SETTING: 10
+EARLY_STOP = False # BASE SETTING: False
+NO_CHANGE_MAX_GENERATIONS = 10 # BASE SETTING: 10
 # ==========================================
 
 # ==========================================
 # Elitism allows the best fit of the generaton to be preserved
-ELITISM = True # BASE SETTING: FALSE
+ELITISM = False # BASE SETTING: FALSE
 # ==========================================
 
 # ==========================================
 # Use this configurable setting to switch between Euclidian and search based
-USE_SEARCH_FOR_FITNESS = False # BASE SETTING: TRUE
+# True = DLS search (SLOW)
+USE_SEARCH_FOR_FITNESS = False # BASE SETTING: False
 # ==========================================
 
 
@@ -67,6 +68,8 @@ USE_SEARCH_FOR_FITNESS = False # BASE SETTING: TRUE
 # You can change the depth limit so that the search algorithm goes deeper before turning around.
 DEPTH_LIMIT = 8 # BASE SETTING: 8
 # USE_DLS_ONLY set to True allows it to be used instead of euclideian math.
+
+# True = only searches 1 generation and gives best fit
 USE_DLS_ONLY = False # BASE SETTING: FALSE
 # ==========================================
 

@@ -28,24 +28,11 @@ class BaselineGA(AbstractGA):
         self.population stores the current population 
         self.fitnesses stores the fitness of each member of the population (in the order they appear in self.population). 
     """
-
-    def select_parents(self, population, fitnesses):
-        eps = 1e-6
-        if not fitnesses:
-            return [random.choice(population) for _ in  range(len(population))]
-        
-        inv = [1.0 / (f + eps) for f in fitnesses]
-        total = sum(inv)
-
-        if total == 0:
-            return [random.choice(population) for _ in range(len(population))]
-        probs = [v / total for v in inv]
-
-        return random.choices(population, weights= probs, k=len(population))
-
+    # Picks two parents at random
     def choose_two(self, parents):
         return random.sample(parents, 2)
 
+    # 
     def crossover(self, parent1, parent2):
         
         size = len(parent1)
@@ -63,7 +50,7 @@ class BaselineGA(AbstractGA):
             if left > right: 
                 left, right = right, left
 
-
+        # order crossover (OX) 
         def ox(p1, p2):
             child = [None] * size
             
@@ -308,7 +295,7 @@ class BaselineGA(AbstractGA):
         if self.number_of_generations >= config.MAX_NUMBER_OF_GENERATIONS:
             print(f"Stopped: Maximum generations reached: {config.MAX_NUMBER_OF_GENERATIONS}")
             return True
-        
+
         # if early stop is True, checking if its been triggered.
         if config.EARLY_STOP:
             if self.generations_no_improvement >= config.NO_CHANGE_MAX_GENERATIONS:
