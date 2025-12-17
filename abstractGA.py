@@ -96,11 +96,10 @@ class AbstractGA(ABC):
     """      
     def calculate_fitness_of_population(self):
         if config.USE_SEARCH_FOR_FITNESS == True:
-            self.fitnesses = [self.calculate_fitness_euclidian(i) for i in self.population]
-        if config.USE_SEARCH_FOR_FITNESS == False:
             self.fitnesses = [self.calculate_fitness_dfs(i) for i in self.population]
+        else:
+            self.fitnesses = [self.calculate_fitness_euclidian(i) for i in self.population]
 
-        
         # check for new best solution		
         for i in range(len(self.population)):
             if ((self.best_individual == None) or (self.fitnesses[i] < self.best_fitness)):

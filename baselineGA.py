@@ -270,7 +270,7 @@ class BaselineGA(AbstractGA):
             best_chromosome, best_fitness = self.depth_limited_search(limit=config.DEPTH_LIMIT)
             if best_chromosome is not None:
                 return best_fitness
-            else: 
+            else:   
                 # Fallback to euclidian if failure
                 return self.calculate_fitness_euclidian(chromosome)
         else:
@@ -287,7 +287,7 @@ class BaselineGA(AbstractGA):
             return True
         
         if config.EARLY_STOP:
-            if self.generations_no_improvement >= config.MAX_NUMBER_OF_GENERATIONS:
+            if self.generations_no_improvement >= config.NO_CHANGE_MAX_GENERATIONS:
                 print(f"Early stopping triggered: No improvement for {config.NO_CHANGE_MAX_GENERATIONS} generations")
                 return True 
             
