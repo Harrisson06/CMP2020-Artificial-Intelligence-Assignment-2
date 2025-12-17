@@ -33,7 +33,7 @@ class AbstractGA(ABC):
        3. run the GA until the stopping criteria is met and 
        4. return the best found solution 
     """
-    def run_GA(self):
+    def run_GA(self, per_gen_callback=None):
         # reset fitness
         self.fitnesses = []
         self.best_fitness = -1
@@ -59,12 +59,12 @@ class AbstractGA(ABC):
             
         # Run GA until stopping criteria is met (e.g. number of generations reached) -- you could experiment with alternative stopping criteria
         while not self.finished():
-            self.produce_new_generation()  
+            self.produce_new_generation() 
             self.number_of_generations += 1          
             print ("number of generations =", self.number_of_generations, " best fitness = ", self.best_fitness)
 
-            if per_generation_callback is not None and self.number_of_generations:
-                per_generation_callback(self.convert_chromosome_to_city_list(self.best_individual),
+            if per_gen_callback is not None and self.number_of_generations:
+                per_gen_callback(self.convert_chromosome_to_city_list(self.best_individual),
                                         self.best_fitness,
                                         self.number_of_generations)
             

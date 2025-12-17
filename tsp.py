@@ -15,6 +15,11 @@ from environment import Environment
 
 import time
 
+# Handles displaying info for each generation
+def per_gen_callback(solution_cities, fitness, gen):
+    print(f"Generation {gen} | Best Fitness: {fitness:.4f} | Route: {solution_cities}")
+
+
 def main():
     world = World()
     # show cities in the random order they were created in
@@ -22,10 +27,7 @@ def main():
     
     # Run the GA
     ga = BaselineGA(world) # <-- if you write multiple different GAs to compare, you can modify this line to test them out
-
-    def per_gen_callback(solution_cities, fitness, gen):
-        print(f"[gen {gen}] Locations to visit: {solution_cities} Fitness: {fitness}")
-    solution, fitness = ga.run_GA()
+    solution, fitness = ga.run_GA(per_gen_callback)
     
     # show cities in the order provided by the GA
     world.update_world(solution)

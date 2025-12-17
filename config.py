@@ -29,7 +29,7 @@ NUMBER_OF_WALLS = 0
 
 # ==========================================
 # GENTETIC ALGORITHM PARAMETERS 
-POPULATION_SIZE = 30 # BASE SETTING: 30
+POPULATION_SIZE = 300 # BASE SETTING: 30
 CROSSOVER_RATE = 1 # BASE SETTING: 0.2
 MUTATION_RATE = 0.05 # BASE SETTING: 0.05
 # ==========================================
@@ -47,7 +47,7 @@ TOURNAMENT_K = 3 # BASE SETTING: 3
 
 # ==========================================
 # Early stopping system 
-EARLY_STOP_GENERATIONS = True # BASE SETTING: False
+EARLY_STOP = True # BASE SETTING: False
 NO_CHANGE_MAX_GENERATIONS = 10 # BASE SETTING: 10
 # ==========================================
 
