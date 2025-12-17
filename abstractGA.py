@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 import random
 
 import config
-import tsp
+
 
 """ A class that contains some common GA methods and attributes. """
 class AbstractGA(ABC):
@@ -95,7 +95,11 @@ class AbstractGA(ABC):
        You will need to implement self.calculate_fitness(...) within BaselineGA.
     """      
     def calculate_fitness_of_population(self):
-        self.fitnesses = [self.calculate_fitness_euclidian(i) for i in self.population]
+        if config.USE_SEARCH_FOR_FITNESS == True:
+            self.fitnesses = [self.calculate_fitness_euclidian(i) for i in self.population]
+        if config.USE_SEARCH_FOR_FITNESS == False:
+            self.fitnesses = [self.calculate_fitness_dfs(i) for i in self.population]
+
         
         # check for new best solution		
         for i in range(len(self.population)):
