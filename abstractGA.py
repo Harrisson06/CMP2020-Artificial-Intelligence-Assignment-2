@@ -104,7 +104,7 @@ class AbstractGA(ABC):
         for i in range(len(self.population)):
             if ((self.best_individual == None) or (self.fitnesses[i] < self.best_fitness)):
                 self.best_fitness = self.fitnesses[i]
-                self.best_individual = self.population[i]       
+                self.best_individual = self.population[i]
     
     #
     # the abstract methods

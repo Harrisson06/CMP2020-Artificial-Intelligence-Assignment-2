@@ -106,13 +106,24 @@ class BaselineGA(AbstractGA):
         best_idx = min(tournament_indicies, key=lambda i: fitnesses[i])
         return population[best_idx]
 
-    # Small wrappers for testing and compatability.
-    def wrapper_crossover(self, parent1, parent2):
-        return self.crossover(parent1, parent2)
+
+    # Wrappers for test_GA.py
+    def perform_tournament_selection(self, k):
+        """Tournament selection wrapper for test_GA.py"""
+        return self.tournament_selection(self.population, self.fitnesses, k)
     
-    def wrapper_mutation(self, individual):
+    def perform_mutation(self, individual):
+        """Mutation wrapper for test_GA.py"""
         return self.mutation(individual)
     
+    def perform_crossover(self, parent1, parent2):
+        """Crossover wrapper for test_GA.py"""
+        return self.crossover(parent1, parent2)
+
+    def calculate_fitness(self, chromosome):
+        """Fitness calculation wrapper for test_GA.py"""
+        return self.calculate_fitness_euclidian(chromosome)
+
     def set_random_seed(self, seed):
         import numpy as _np
         random.seed(seed)
@@ -280,7 +291,7 @@ class BaselineGA(AbstractGA):
     # Creates two stopping criteria 
     # Max generations are reaches as a default
     # Early stopping can be activated in config.py
-    # max generations without change can be altered in config.py
+    # no change max generations can be altered in config.py
     def finished(self):
         if self.number_of_generations >= config.MAX_NUMBER_OF_GENERATIONS:
             print(f"Stopped: Maximum generations reached: {config.MAX_NUMBER_OF_GENERATIONS}")
@@ -310,9 +321,4 @@ class BaselineGA(AbstractGA):
         world_list = self.world.get_cities()
         return [world_list[i] for i in chromosome]
     #-------------------
-# End of BaselineGA class    
-        
-    
-       
-       
- 
+# End of BaselineGA class
