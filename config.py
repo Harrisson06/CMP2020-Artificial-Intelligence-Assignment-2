@@ -58,7 +58,7 @@ ELITISM = True # BASE SETTING: FALSE
 
 # ==========================================
 # Use this configurable setting to switch between Euclidian and search based
-USE_SEARCH_FOR_FITNESS = True # BASE SETTING: FALSE
+USE_SEARCH_FOR_FITNESS = False # BASE SETTING: TRUE
 # ==========================================
 
 

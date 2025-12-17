@@ -26,6 +26,7 @@ class AbstractGA(ABC):
         self.best_fitness = -1
         self.best_individual = None        
         self.number_of_generations = 0
+        self.generations_no_improvement = 1
         
     """ Returns the best individual found and the fitness of that individual
        1. reset the GA attributes, 

@@ -120,8 +120,17 @@ class BaselineGA(AbstractGA):
 
     def produce_new_generation(self):
 
+        # Store previous best fitness
+        previous_best = self.best_fitness
+
         # Calculates new fitness and returns the best individual
         self.calculate_fitness_of_population()
+
+        # Track improvements for early stopping
+        if self.best_fitness < previous_best:
+            self.generations_no_improvement = 0 # Resets the counter if a fitness improvement is found
+        else:
+            self.generations_no_improvement += 1 # Increment when no fitness improvement 
 
         # Stores the current best before generating new population (elitism based)
         saved_best = self.best_individual.copy() if self.best_individual is not None else None
@@ -154,7 +163,7 @@ class BaselineGA(AbstractGA):
 
         # Elitism: Replace worst offspring with best saved individual
         if config.ELITISM and saved_best is not None:
-            offspring_fitnesses = [self.calculate_fitness(ind) for ind in offspring]
+            offspring_fitnesses = [self.calculate_fitness_euclidian(ind) for ind in offspring]
             worst_idx = max(range(len(offspring_fitnesses)), key =lambda i: offspring_fitnesses[i])
             offspring[worst_idx] = saved_best
 
@@ -273,12 +282,12 @@ class BaselineGA(AbstractGA):
     # Early stopping can be activated in config.py
     # max generations without change can be altered in config.py
     def finished(self):
-        if self.number_of_generations >= config.NO_CHANGE_MAX_GENERATIONS:
+        if self.number_of_generations >= config.MAX_NUMBER_OF_GENERATIONS:
             print(f"Stopped: Maximum generations reached: {config.MAX_NUMBER_OF_GENERATIONS}")
             return True
         
         if config.EARLY_STOP:
-            if self.generations_no_improvements >= config.NO_CHANGE_MAX_GENERATIONS:
+            if self.generations_no_improvement >= config.MAX_NUMBER_OF_GENERATIONS:
                 print(f"Early stopping triggered: No improvement for {config.NO_CHANGE_MAX_GENERATIONS} generations")
                 return True 
             
