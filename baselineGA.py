@@ -211,17 +211,27 @@ class BaselineGA(AbstractGA):
             dy = a.pose.y - b.pose.y
             return math.hypot(dx, dy)
         
+        """ The Depth first search function below was created using Microsoft Copilot
+            Tool: Microsoft Copilot (2025) Depth first search, 16 December.
+            Main Prompt: "Using python, create a depth first search function that would fit the traveling salesmen problem"
+            Follow-up promts: No follow-up prompt was given.
+            Checked against:
+                Harmen H. (2025) Search [Lecture 2]. Artificial inteligence CMP2020, University of lincoln, 10th October 2025
+        """
+        # Depth first search function 
         def dfs(path, used_set, current_parial_len):
             depth = len(path)
 
             # If a full tour is completed, compute full fitness
             if depth == n:
 
+                # Fitness calculation
                 fitness = self.calculate_fitness_euclidian(path)
                 if fitness < best["fitness"]:
                     best["fitness"] = fitness
                     best["chromosome"] = path.copy()
                 return
+            
             # If depth limit is hit but not a full tour, dont extend further
             if depth >= limit:
                 return
@@ -252,6 +262,7 @@ class BaselineGA(AbstractGA):
         for start in range(n):
             dfs([start], {start}, 0.0)
 
+        # Checking best chromosome and fitness. 
         if best["chromosome"] is None:
             return (None, float("inf"))
         return (best["chromosome"], best["fitness"])
@@ -275,7 +286,8 @@ class BaselineGA(AbstractGA):
             total += math.hypot(dx, dy)
         
         return total
-
+    
+    # calculating fitness for depth first search
     def calculate_fitness_dfs(self, chromosome):
         if config.USE_SEARCH_FOR_FITNESS:
             best_chromosome, best_fitness = self.depth_limited_search(limit=config.DEPTH_LIMIT)
@@ -297,6 +309,7 @@ class BaselineGA(AbstractGA):
             print(f"Stopped: Maximum generations reached: {config.MAX_NUMBER_OF_GENERATIONS}")
             return True
         
+        # if early stop is True, checking if its been triggered.
         if config.EARLY_STOP:
             if self.generations_no_improvement >= config.NO_CHANGE_MAX_GENERATIONS:
                 print(f"Early stopping triggered: No improvement for {config.NO_CHANGE_MAX_GENERATIONS} generations")
